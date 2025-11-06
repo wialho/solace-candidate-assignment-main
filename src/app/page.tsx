@@ -1,6 +1,7 @@
 "use client";
 
 import { AdvocateTable } from "@/components/advocatetable";
+import { PageGroup } from "@/components/pagegroup";
 import { Input } from "@/components/ui/input";
 import { useCallback, useEffect, useState } from "react";
 import { debounce } from "throttle-debounce";
@@ -8,14 +9,24 @@ import { debounce } from "throttle-debounce";
 export default function Home() {
   const [advocates, setAdvocates] = useState([]);
   const [searchTerm, setSearchTerm] = useState(undefined);
+  const [page, setPage] = useState(0);
+  const limit = 10;
 
   useEffect(() => {
-    fetch(`/api/advocates?searchterm=${searchTerm}`).then((response) => {
+    fetch(getApiUrl()).then((response) => {
       response.json().then((jsonResponse) => {
         setAdvocates(jsonResponse.data);
       });
     });
-  }, [searchTerm]);
+  }, [searchTerm, page]);
+
+  const getApiUrl = () => {
+    if (searchTerm) {
+      return `/api/advocates?searchterm=${searchTerm}&page=${page}`;
+    }
+
+    return `/api/advocates?page=${page}`;
+  };
 
   const debounceChange = useCallback(
     debounce(600, (val) => setSearchTerm(val)),
@@ -48,6 +59,12 @@ export default function Home() {
             data={advocates}
           />
         </div>
+        <PageGroup
+          page={page}
+          limit={limit}
+          recordsDisplay={advocates.length}
+          onClick={setPage}
+        />
       </div>
     </main>
   );

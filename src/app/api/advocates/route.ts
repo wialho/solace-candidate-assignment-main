@@ -3,15 +3,26 @@ import db from "../../../db";
 import { advocates } from "../../../db/schema";
 import { advocateData } from "../../../db/seed/advocates";
 
-export async function GET(search, limit, offset) {
-  // Uncomment this line to use a database
+export async function GET(req: Request) {
+  const { searchParams } = new URL(req.url);
+  const limit = 10;
+  const page = parseInt(searchParams.get("page") ?? "0");
+  const searchTerm = searchParams.get("searchterm");
+
+  // https://orm.drizzle.team/docs/select advanced filter section for reference on undefined
   const data = await db
     .select()
     .from(advocates)
-    .where(sql`${advocates.searchTerm} @@ to_tsquery('english', ${search})`)
-    .orderby(asc(advocates.createdAt))
-    .limit(limit)
-    .offset(offset);
+    .where(
+      searchTerm
+        ? sql`${
+            advocates.searchTerm
+          } @@ to_tsquery('english', ${searchParams.get("searchterm")})`
+        : undefined
+    )
+    .orderBy(asc(advocates.createdAt))
+    .limit(10)
+    .offset(page * limit);
 
   // const data = advocateData;
 

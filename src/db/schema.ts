@@ -31,15 +31,16 @@ const advocates = pgTable(
     yearsOfExperience: integer("years_of_experience").notNull(),
     phoneNumber: bigint("phone_number", { mode: "number" }).notNull(),
     createdAt: timestamp("created_at").default(sql`CURRENT_TIMESTAMP`),
+
     // https://orm.drizzle.team/docs/guides/full-text-search-with-generated-columns
     searchTerm: tsvector("search_term")
       .notNull()
       .generatedAlwaysAs(
         (): SQL => sql`to_tsvector('english', 
-      ${advocates.firstName}
-      ${advocates.lastName}
-      ${advocates.city}
-      ${advocates.degree}
+      ${advocates.firstName} ||
+      ${advocates.lastName} ||
+      ${advocates.city} ||
+      ${advocates.degree} ||
       ${advocates.specialties})`
       ),
   },
