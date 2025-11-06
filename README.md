@@ -27,10 +27,10 @@ The app is configured to return a default list of advocates. This will allow you
 1. Feel free to use whatever configuration of postgres you like. The project is set up to use docker-compose.yml to set up postgres. The url is in .env.
 
 ```bash
-docker compose up -d
+docker compose up --build
 ```
 
-2. Create a `solaceassignment` database.
+2. Log into pg4admin at localhost:5050, user = admin@admin.com, password = admin, server = db to check if the db was created correctly
 
 3. Push migration to the database
 
@@ -38,7 +38,7 @@ docker compose up -d
 npx drizzle-kit push
 ```
 
-4. Seed the database
+5. Seed the database
 
 ```bash
 curl -X POST http://localhost:3000/api/seed

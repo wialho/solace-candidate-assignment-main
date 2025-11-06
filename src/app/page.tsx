@@ -1,91 +1,71 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { AdvocateTable } from "@/components/advocatetable";
+import { PageGroup } from "@/components/pagegroup";
+import { Input } from "@/components/ui/input";
+import { useCallback, useEffect, useState } from "react";
+import { debounce } from "throttle-debounce";
 
 export default function Home() {
   const [advocates, setAdvocates] = useState([]);
-  const [filteredAdvocates, setFilteredAdvocates] = useState([]);
+  const [searchTerm, setSearchTerm] = useState(undefined);
+  const [page, setPage] = useState(0);
+  const limit = 10;
 
   useEffect(() => {
-    console.log("fetching advocates...");
-    fetch("/api/advocates").then((response) => {
+    fetch(getApiUrl()).then((response) => {
       response.json().then((jsonResponse) => {
         setAdvocates(jsonResponse.data);
-        setFilteredAdvocates(jsonResponse.data);
       });
     });
-  }, []);
+  }, [searchTerm, page]);
 
-  const onChange = (e) => {
-    const searchTerm = e.target.value;
+  const getApiUrl = () => {
+    if (searchTerm) {
+      return `/api/advocates?searchterm=${searchTerm}&page=${page}`;
+    }
 
-    document.getElementById("search-term").innerHTML = searchTerm;
-
-    console.log("filtering advocates...");
-    const filteredAdvocates = advocates.filter((advocate) => {
-      return (
-        advocate.firstName.includes(searchTerm) ||
-        advocate.lastName.includes(searchTerm) ||
-        advocate.city.includes(searchTerm) ||
-        advocate.degree.includes(searchTerm) ||
-        advocate.specialties.includes(searchTerm) ||
-        advocate.yearsOfExperience.includes(searchTerm)
-      );
-    });
-
-    setFilteredAdvocates(filteredAdvocates);
+    return `/api/advocates?page=${page}`;
   };
 
-  const onClick = () => {
-    console.log(advocates);
-    setFilteredAdvocates(advocates);
-  };
+  const debounceChange = useCallback(
+    debounce(600, (val) => setSearchTerm(val)),
+    []
+  );
 
   return (
     <main style={{ margin: "24px" }}>
-      <h1>Solace Advocates</h1>
-      <br />
-      <br />
-      <div>
-        <p>Search</p>
-        <p>
-          Searching for: <span id="search-term"></span>
-        </p>
-        <input style={{ border: "1px solid black" }} onChange={onChange} />
-        <button onClick={onClick}>Reset Search</button>
+      <div className="flex flex-col gap-7">
+        <div className="flex flex-row align-bottom">
+          <h1 className="basis-2/3">Solace Advocates</h1>
+          <Input
+            className="basis-1/3"
+            onChange={(e) => debounceChange(e.target.value)}
+            type="search"
+            placeholder="Search"
+          />
+        </div>
+        <div className="flex flex-row">
+          <AdvocateTable
+            columns={[
+              "First Name",
+              "Last Name",
+              "City",
+              "Degree",
+              "Specialties",
+              "Years of Experience",
+              "Phone Number",
+            ]}
+            data={advocates}
+          />
+        </div>
+        <PageGroup
+          page={page}
+          limit={limit}
+          recordsDisplay={advocates.length}
+          onClick={setPage}
+        />
       </div>
-      <br />
-      <br />
-      <table>
-        <thead>
-          <th>First Name</th>
-          <th>Last Name</th>
-          <th>City</th>
-          <th>Degree</th>
-          <th>Specialties</th>
-          <th>Years of Experience</th>
-          <th>Phone Number</th>
-        </thead>
-        <tbody>
-          {filteredAdvocates.map((advocate) => {
-            return (
-              <tr>
-                <td>{advocate.firstName}</td>
-                <td>{advocate.lastName}</td>
-                <td>{advocate.city}</td>
-                <td>{advocate.degree}</td>
-                <td>
-                  {advocate.specialties.map((s) => (
-                    <div>{s}</div>
-                  ))}
-                </td>
-                <td>{advocate.yearsOfExperience}</td>
-                <td>{advocate.phoneNumber}</td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
     </main>
   );
 }
